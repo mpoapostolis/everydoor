@@ -3,12 +3,14 @@
 // Every knob here is one of the generator's actual inputs: the city seed, the flavour, and which
 // archetype to compose. Nothing is a display setting. Turning one and watching the world change is
 // the entire point of the demo — so the panel writes straight to the swap and never keeps its own copy.
-import { archetypeIds, CITY_THEMES, type CityKind } from '@everydoor/core';
+import { archetypeIds, CITY_THEMES, styleIds, type CityKind } from '@everydoor/core';
 
 export interface PanelHooks {
   onCity(seed: number, theme: CityKind): void;
-  onArchetype(id: string, seed: number): void;
+  onArchetype(id: string, seed: number, style: string): void;
   onExit(): void;
+  /** A fresh everything: new seed, new flavour, new building, and a door picked at random. */
+  onRandomize(seed: number, theme: CityKind): void;
 }
 
 export interface PanelState {
@@ -28,6 +30,7 @@ export class Panel {
   private readonly seedInput: HTMLInputElement;
   private readonly themeSel: HTMLSelectElement;
   private readonly archSel: HTMLSelectElement;
+  private readonly styleSel: HTMLSelectElement;
   private readonly exitBtn: HTMLButtonElement;
   private readonly vals: Record<string, HTMLElement> = {};
 
@@ -43,11 +46,14 @@ export class Panel {
       <div class="row"><span class="k">city</span>
         <select id="p-theme">${Object.keys(CITY_THEMES).map((k) => `<option value="${k}"${k === theme ? ' selected' : ''}>${k}</option>`).join('')}</select>
       </div>
-      <div class="row"><button id="p-roll" style="flex:1">🎲 reroll city</button></div>
+      <div class="row"><span class="k">style</span>
+        <select id="p-style"><option value="">— per archetype —</option>${styleIds().map((s) => `<option value="${s}">${s}</option>`).join('')}</select>
+      </div>
       <div class="row"><span class="k">compose</span>
         <select id="p-arch"><option value="">— archetype —</option>${archetypeIds().map((a) => `<option value="${a}">${a}</option>`).join('')}</select>
       </div>
-      <div class="row"><button id="p-exit" style="flex:1">↩ back to the street</button></div>
+      <div class="row"><button id="p-random" class="hero" style="flex:1">🎲 everything, from scratch</button></div>
+      <div class="row"><button id="p-roll" style="flex:1">↻ new city</button><button id="p-exit" style="flex:1">↩ street</button></div>
       <hr />
       ${row('lot seed', 'lotSeed')}
       ${row('doors', 'lots')}
@@ -62,6 +68,7 @@ export class Panel {
     this.seedInput = this.el.querySelector('#p-seed')!;
     this.themeSel = this.el.querySelector('#p-theme')!;
     this.archSel = this.el.querySelector('#p-arch')!;
+    this.styleSel = this.el.querySelector('#p-style')!;
     this.exitBtn = this.el.querySelector('#p-exit')!;
 
     const rebuild = () => hooks.onCity(this.seed, this.themeSel.value as CityKind);
@@ -73,10 +80,24 @@ export class Panel {
       this.seedInput.value = String((this.seed + 0x9e3779b1) >>> 0);
       rebuild();
     });
-    this.archSel.addEventListener('change', () => {
-      if (this.archSel.value) hooks.onArchetype(this.archSel.value, this.seed);
-    });
+    const compose = () => { if (this.archSel.value) hooks.onArchetype(this.archSel.value, this.seed, this.styleSel.value); };
+    this.archSel.addEventListener('change', compose);
+    this.styleSel.addEventListener('change', compose);
     this.exitBtn.addEventListener('click', () => hooks.onExit());
+
+    // EVERYTHING, FROM SCRATCH. Not a "randomize" toy: a new seed rebuilds the city, which redeals
+    // the lot table, which re-derives every interior behind every door — and then drops you through
+    // one of them. Nothing about the world you were just in survives except the rules that made it.
+    this.el.querySelector('#p-random')!.addEventListener('click', () => {
+      const themes = Object.keys(CITY_THEMES) as CityKind[];
+      const theme = themes[Math.floor(Math.random() * themes.length)];
+      const seed = (Math.random() * 0xffffffff) >>> 0;
+      this.seedInput.value = String(seed);
+      this.themeSel.value = theme;
+      this.archSel.value = '';
+      this.styleSel.value = '';
+      hooks.onRandomize(seed, theme);
+    });
   }
 
   get seed(): number { return (Number(this.seedInput.value) || 0) >>> 0; }

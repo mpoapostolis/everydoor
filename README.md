@@ -28,8 +28,19 @@ bun run dev            # http://localhost:5180
 ```
 
 <kbd>WASD</kbd> move · <kbd>shift</kbd> run · <kbd>space</kbd> jump · drag to look · arrows turn ·
-<kbd>E</kbd> at a door. The panel on the left is live: change the seed, the city flavour, or compose
-any archetype on its own.
+<kbd>E</kbd> at a door.
+
+The panel on the left is live — seed, city flavour, prop style, or compose any archetype on its own
+— and **🎲 everything, from scratch** is the one to press first: a new seed redeals the whole city,
+which redeals the lot table, which re-derives every interior behind every door, and then walks you
+through one of them. The door is picked *from the seed*, so typing that number back reproduces the
+entire trip: same city, same building, same rooms.
+
+The panel on the right is the **floorplan**, drawn from the same semantic map the walls were built
+from — rooms and their names, doors, locks, secret passages, the key, where the story starts, who is
+standing where, and you. Indoors it is the building's plan for the storey you are on; outdoors it is
+the street, with every door you can walk into. If the plan says a door is locked and the world shows
+it open, the bug is in the renderer.
 
 npm and pnpm work too (`npm install && npm run dev`).
 

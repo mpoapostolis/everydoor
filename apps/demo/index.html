@@ -12,6 +12,7 @@
 
       #panel {
         position: fixed; top: 12px; left: 12px; z-index: 10; width: 232px;
+        max-height: calc(100vh - 24px); overflow-y: auto; overscroll-behavior: contain;
         background: #12151ccc; backdrop-filter: blur(8px);
         border: 1px solid #ffffff1f; border-radius: 10px; padding: 12px;
         font-size: 12px; line-height: 1.5; user-select: none;
@@ -26,12 +27,16 @@
       }
       #panel button { cursor: pointer; }
       #panel button:hover { background: #273044; }
+      #panel button.hero { background: #1e3a5f; border-color: #7dd3fc4d; color: #cfe9ff; padding: 6px; }
+      #panel button.hero:hover { background: #27507f; }
+      #panel button:disabled { cursor: default; }
       #panel input { width: 92px; text-align: right; }
       #panel hr { border: 0; border-top: 1px solid #ffffff14; margin: 10px 0; }
       #panel .keys { color: #6b7688; font-size: 11px; }
 
       #prompt {
-        position: fixed; left: 50%; bottom: 15%; transform: translateX(-50%); z-index: 10;
+        position: fixed; left: 50%; bottom: 15%; transform: translateX(-50%); z-index: 12;
+        max-width: calc(100vw - 24px); overflow: hidden; text-overflow: ellipsis;
         background: #12151cd9; border: 1px solid #ffffff2b; border-radius: 999px;
         padding: 8px 18px; font-size: 13px; letter-spacing: .02em; opacity: 0;
         transition: opacity .16s ease; pointer-events: none; white-space: nowrap;
@@ -47,6 +52,27 @@
       }
       #zone.on { opacity: 1; }
 
+      #floorplan {
+        position: fixed; right: 12px; bottom: 12px; z-index: 10;
+        /* it must never crowd the panel on a narrow window, and never overflow a short one */
+        width: clamp(170px, 30vw, 330px); max-height: calc(100vh - 24px);
+        background: #12151ccc; backdrop-filter: blur(8px);
+        border: 1px solid #ffffff1f; border-radius: 10px; overflow: hidden;
+        font-size: 11px; user-select: none;
+      }
+      #floorplan .fp-head {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 8px 10px; letter-spacing: .1em; text-transform: uppercase; color: #7dd3fc;
+        border-bottom: 1px solid #ffffff14;
+      }
+      #floorplan .fp-head button {
+        font: inherit; color: #8b95a8; background: none; border: 0; cursor: pointer; padding: 0 2px;
+      }
+      #floorplan canvas { display: block; width: 100%; height: auto; aspect-ratio: 1; background: #0d1017; }
+      #floorplan .fp-legend { display: flex; flex-wrap: wrap; gap: 4px 10px; padding: 7px 10px; color: #8b95a8; }
+      #floorplan .fp-legend i { font-style: normal; }
+      #floorplan.collapsed canvas, #floorplan.collapsed .fp-legend { display: none; }
+
       #veil {
         position: fixed; inset: 0; z-index: 20; background: #05070b; opacity: 0;
         transition: opacity .18s ease; pointer-events: none;
@@ -58,6 +84,7 @@
     <div id="panel"></div>
     <div id="zone"></div>
     <div id="prompt"></div>
+    <div id="floorplan"></div>
     <div id="veil"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

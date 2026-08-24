@@ -133,3 +133,41 @@ test('a swap frees what it tore down', () => {
   assert.equal(sharedFreed, 0, 'a swap disposed a material the prop library owns');
   assert.equal(swap.extras.length, 0, 'the extras from the interior are still in the scene');
 });
+
+test('everything, from scratch: one seed decides the city, the flavour AND the door', () => {
+  const { swap } = swapFor();
+  const a = swap.randomize(0xfeed, 'neon', demoScript);
+  assert.equal(swap.place.kind, 'interior', 'randomize should land you inside a building');
+  const first = fingerprint(swap.place.world.map);
+  const lot = swap.place.lot;
+  assert.ok(lot, 'randomize should walk you through a real city door');
+  assert.equal(swap.world.blocked(a.x, a.z, 1.3), false);
+
+  // the whole trip is reproducible: type the seed back and you get the same building
+  const { swap: other } = swapFor(1, 'day');
+  const b = other.randomize(0xfeed, 'neon', demoScript);
+  assert.equal(fingerprint(other.place.world.map), first);
+  assert.equal(other.place.lot.id, lot.id, 'a different door on the same seed');
+  assert.deepEqual([b.x, b.z], [a.x, a.z]);
+
+  // and a different seed is a different everything
+  const { swap: third } = swapFor();
+  third.randomize(0xfeee, 'neon', demoScript);
+  assert.notEqual(fingerprint(third.place.world.map), first);
+});
+
+test('the floorplan draws both worlds from the plan, not from the scene', async () => {
+  const { Floorplan } = await import('../apps/demo/src/floorplan.ts');
+  const host = { innerHTML: '', classList: { toggle() {} }, querySelector: (sel) => {
+    if (sel === '#fp-canvas') return { width: 760, height: 760, getContext: () => document.createElement('canvas').getContext('2d') };
+    return { textContent: '', innerHTML: '', addEventListener() {} };
+  } };
+  const fp = new Floorplan(host);
+
+  const { swap } = swapFor();
+  fp.city(swap.place.world, 0, 0, 0);                       // the street map
+  swap.standalone('hospital', 3, demoScript('hospital'));
+  const map = swap.place.world.map;
+  for (const floor of new Set(map.zones.map((z) => z.floor))) fp.interior(map, map.start.x, map.start.z, 0, floor);
+  assert.ok(map.zones.length > 0);
+});

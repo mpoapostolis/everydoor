@@ -109,7 +109,7 @@ export { CELL, GRID } from './composer/types';
 export type { Dir16, Spot } from './composer/types';
 export { DIR16, DIR16_YAW, dirOf, opposite } from './composer/lut';
 export { nearestStandable, resumeSpot } from './world';
-export { buildProp, propMesh, propDef, propIds, allProps, styleOf, STYLES } from './props/index';
+export { buildProp, propMesh, propDef, propIds, allProps, styleOf, styleIds, STYLES } from './props/index';
 export { buildBlocky, buildCharacter, seededLook, lookSeed, randomLook } from './blocky';
 export type { Blocky, BlockyLook, BlockyOpts, CreatureKind } from './blocky';
 export { withCutout, dressCutout, updateCutout, disableCutout, CUT } from './cameraCutout';

@@ -10,7 +10,7 @@
 // identity is the reason the swap can be this brutal: tear the scene down, build the other one.
 import * as THREE from 'three';
 import {
-  createCity, createLotInterior, createInterior, lotSeed,
+  createCity, createInterior, lotSeed, hash32,
   CITY_THEMES, DIR16_YAW, nearestStandable,
   type CityKind, type CityLot, type CityWorld, type ComposedWorld, type World, type WorldScript,
 } from '@everydoor/core';
@@ -83,20 +83,34 @@ export class WorldSwap {
   // -- interiors -----------------------------------------------------------------------------
 
   /** Walk into a street door. */
-  enterLot(lot: CityLot, script?: WorldScript): { x: number; z: number; yaw: number } {
+  enterLot(lot: CityLot, script?: WorldScript, style?: string): { x: number; z: number; yaw: number } {
     const from = { seed: this.seed, theme: this.theme, lot };
     this.reset();
-    const world = createLotInterior(this.root, from.seed, lot, script);
+    const world = createInterior(this.root, { seed: lotSeed(from.seed, lot.id), archetype: lot.archetype, script, style });
     this.from = from;
     return this.settle(world, lot, lot.archetype);
   }
 
   /** Compose an interior on its own, with no city behind it (the panel's archetype jump). */
-  standalone(archetype: string, seed = this.seed, script?: WorldScript): { x: number; z: number; yaw: number } {
+  standalone(archetype: string, seed = this.seed, script?: WorldScript, style?: string): { x: number; z: number; yaw: number } {
     this.reset();
-    const world = createInterior(this.root, { seed: seed >>> 0, archetype, script });
+    const world = createInterior(this.root, { seed: seed >>> 0, archetype, script, style: style || undefined });
     this.from = null;
     return this.settle(world, null, archetype);
+  }
+
+  /** EVERYTHING, FROM SCRATCH: a new seed redeals the whole city — its streets, its buildings and
+   *  the lot table — and then this walks you through one of its doors. The door is picked FROM THE
+   *  SEED, not from a die, so typing that seed back reproduces the entire trip: same city, same
+   *  flavour, same building, same rooms. `pick` is the story to furnish the chosen archetype with. */
+  randomize(seed: number, theme: CityKind, pick: (archetype: string) => WorldScript | undefined): { x: number; z: number; yaw: number } {
+    this.city(seed, theme);
+    const lots = (this.place.world as CityWorld).lots();
+    // prefer a civic door: they are the deliberately varied ones (a school, a hospital, a precinct)
+    const civic = lots.filter((l) => l.civic);
+    const pool = civic.length ? civic : lots;
+    const lot = pool[hash32(seed, 'door') % pool.length];
+    return this.enterLot(lot, pick(lot.archetype));
   }
 
   /** Back out onto the pavement, in front of the building we just left, facing the street. */

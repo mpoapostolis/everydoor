@@ -11,6 +11,7 @@ import { Lighting } from './lighting';
 import { WorldSwap } from './world-swap';
 import { updatePeople } from './people';
 import { Panel } from './panel';
+import { Floorplan } from './floorplan';
 import { demoScript } from './script';
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -35,9 +36,24 @@ const swap = new WorldSwap(scene, {
   onInterior: (w: ComposedWorld) => { lighting.interior(w.map); dressCutout(swap.root); },
 });
 
+const floorplan = new Floorplan(document.getElementById('floorplan')!);
+
 const panel = new Panel({
-  onCity: (seed, theme) => { const s = swap.city(seed, theme); player.place(swap.world, s.x, s.z, s.yaw); banner('the street'); },
-  onArchetype: (id, seed) => { const s = swap.standalone(id, seed, demoScript(id)); player.place(swap.world, s.x, s.z, s.yaw); banner(id); },
+  onCity: (seed, theme) => veil(() => {
+    const s = swap.city(seed, theme);
+    player.place(swap.world, s.x, s.z, s.yaw);
+    banner('the street');
+  }),
+  onArchetype: (id, seed, style) => veil(() => {
+    const s = swap.standalone(id, seed, demoScript(id), style);
+    player.place(swap.world, s.x, s.z, s.yaw);
+    banner(id);
+  }),
+  onRandomize: (seed, theme) => veil(() => {
+    const s = swap.randomize(seed, theme, (arch) => demoScript(arch));
+    player.place(swap.world, s.x, s.z, s.yaw);
+    banner(swap.place.kind === 'interior' ? (swap.place.lot?.name ?? 'somewhere new') : 'the street');
+  }),
   onExit: () => leave(),
 }, swap.seed, swap.theme);
 
@@ -107,7 +123,7 @@ addEventListener('resize', () => {
   renderer.setSize(innerWidth, innerHeight);
 });
 
-let last = performance.now(), fps = 60, t = 0;
+let last = performance.now(), fps = 60, t = 0, frame = 0;
 renderer.setAnimationLoop(() => {
   const now = performance.now();
   const dt = Math.min(0.05, (now - last) / 1000);
@@ -136,6 +152,17 @@ renderer.setAnimationLoop(() => {
   }
 
   if (bannerT > 0 && (bannerT -= dt) <= 0) zoneEl.classList.remove('on');
+
+  // THE PLAN, drawn from the same map the walls came from. Every third frame: it is a canvas
+  // redraw of a few hundred rects, not free, and nothing on it moves faster than the player.
+  if (floorplan.visible && (frame++ % 3 === 0)) {
+    if (swap.place.kind === 'interior') {
+      const w = swap.place.world;
+      floorplan.interior(w.map, x, z, player.yaw, w.floorAt(x, z));
+    } else {
+      floorplan.city(swap.place.world as CityWorld, x, z, player.yaw);
+    }
+  }
 
   panel.update({
     where: swap.place.kind === 'city' ? `city · ${swap.place.theme}` : `inside · ${swap.place.archetype}`,
