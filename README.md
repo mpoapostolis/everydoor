@@ -44,6 +44,23 @@ it open, the bug is in the renderer.
 
 npm and pnpm work too (`npm install && npm run dev`).
 
+## Deploy it
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmpoapostolis%2Feverydoor)
+
+`vercel.json` already carries the settings, so importing the repo needs no clicking: Vercel runs
+`bun install` and `bun run build` and serves `apps/demo/dist`. It is a static build — no server, no
+runtime, no environment variables. The hashed asset bundle is served `immutable`, `index.html` is not.
+
+From the CLI:
+
+```bash
+npx vercel        # preview
+npx vercel --prod
+```
+
+Any static host works the same way: build, then serve `apps/demo/dist`.
+
 ## Use it
 
 ```ts
