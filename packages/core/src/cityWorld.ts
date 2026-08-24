@@ -13,11 +13,11 @@ import {
 
 // ============================================================================
 // CityWorld — infinite, chunk-streamed GRID city.
-// Ported from the verified infinite-city games:
-//   - index.html (daytime: concrete/glass buildings, road ground, parks, trees,
-//     street props) — bright palette + window CanvasTexture.
-//   - city.html  (night: per-chunk InstancedMesh towers with emissive-lit
-//     windows, dark palette, low moonlit feel).
+// Grown out of two single-file prototypes of my own (vxlverse), whose behaviour this keeps:
+//   - a DAYTIME city — concrete/glass buildings, road ground, parks, trees, street props;
+//     bright palette, windows painted into a CanvasTexture.
+//   - a NIGHT city — per-chunk InstancedMesh towers with emissive-lit windows, dark
+//     palette, a low moonlit feel.
 // The grid is mathematically endless: each GLOBAL cell is decided
 // deterministically from its (globalCellX, globalCellZ). A cell is a ROAD when
 // (gcx % ROAD_EVERY === 0 || gcz % ROAD_EVERY === 0) so avenues line up across
