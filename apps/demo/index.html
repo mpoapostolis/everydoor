@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>voxel-city</title>
+    <style>
+      :root { color-scheme: dark; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #0b0d12; color: #e8ecf4; }
+      canvas { display: block; }
+
+      #panel {
+        position: fixed; top: 12px; left: 12px; z-index: 10; width: 232px;
+        background: #12151ccc; backdrop-filter: blur(8px);
+        border: 1px solid #ffffff1f; border-radius: 10px; padding: 12px;
+        font-size: 12px; line-height: 1.5; user-select: none;
+      }
+      #panel h1 { margin: 0 0 8px; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: #7dd3fc; }
+      #panel .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0; }
+      #panel .k { color: #8b95a8; }
+      #panel .v { color: #e8ecf4; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      #panel select, #panel button, #panel input {
+        font: inherit; font-size: 11px; color: inherit; background: #1c2130;
+        border: 1px solid #ffffff24; border-radius: 6px; padding: 3px 6px; min-width: 0;
+      }
+      #panel button { cursor: pointer; }
+      #panel button:hover { background: #273044; }
+      #panel input { width: 92px; text-align: right; }
+      #panel hr { border: 0; border-top: 1px solid #ffffff14; margin: 10px 0; }
+      #panel .keys { color: #6b7688; font-size: 11px; }
+
+      #prompt {
+        position: fixed; left: 50%; bottom: 15%; transform: translateX(-50%); z-index: 10;
+        background: #12151cd9; border: 1px solid #ffffff2b; border-radius: 999px;
+        padding: 8px 18px; font-size: 13px; letter-spacing: .02em; opacity: 0;
+        transition: opacity .16s ease; pointer-events: none; white-space: nowrap;
+      }
+      #prompt.on { opacity: 1; }
+      #prompt b { color: #fbbf24; font-weight: 600; }
+
+      #zone {
+        position: fixed; left: 50%; top: 18px; transform: translateX(-50%); z-index: 10;
+        font-size: 13px; letter-spacing: .1em; text-transform: uppercase;
+        color: #ffffffb3; text-shadow: 0 2px 8px #000; opacity: 0; transition: opacity .3s ease;
+        pointer-events: none;
+      }
+      #zone.on { opacity: 1; }
+
+      #veil {
+        position: fixed; inset: 0; z-index: 20; background: #05070b; opacity: 0;
+        transition: opacity .18s ease; pointer-events: none;
+      }
+      #veil.on { opacity: 1; }
+    </style>
+  </head>
+  <body>
+    <div id="panel"></div>
+    <div id="zone"></div>
+    <div id="prompt"></div>
+    <div id="veil"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
