@@ -32,9 +32,16 @@ const veilEl = document.getElementById('veil')!;
 // Every world the swap builds must be dressed for the see-through, or a wall between the lens and
 // the hero stays solid and you steer a body you cannot see.
 const swap = new WorldSwap(scene, {
-  onCity: (theme: CityKind) => { lighting.city(CITY_THEMES[theme]); dressCutout(swap.root); },
-  onInterior: (w: ComposedWorld) => { lighting.interior(w.map); dressCutout(swap.root); },
+  onCity: (theme: CityKind) => { lighting.city(CITY_THEMES[theme]); relight(); },
+  onInterior: (w: ComposedWorld) => { lighting.interior(w.map); relight(); },
 });
+
+/** Dress the fresh world for the see-through, and put the overhead boost back if the lens is still
+ *  up there — a swap re-configures the rig for the new world and would otherwise drop it. */
+function relight(): void {
+  dressCutout(swap.root);
+  lighting.overhead(player.cameraMode === 'top');
+}
 
 const floorplan = new Floorplan(document.getElementById('floorplan')!);
 
@@ -49,12 +56,13 @@ const panel = new Panel({
     player.place(swap.world, s.x, s.z, s.yaw);
     banner(id);
   }),
-  onRandomize: (seed, theme) => veil(() => {
-    const s = swap.randomize(seed, theme, (arch) => demoScript(arch));
+  onRandomize: (seed, theme, archetype, style) => veil(() => {
+    const s = swap.randomize(seed, theme, (arch) => demoScript(arch), { archetype, style });
     player.place(swap.world, s.x, s.z, s.yaw);
     banner(swap.place.kind === 'interior' ? (swap.place.lot?.name ?? 'somewhere new') : 'the street');
   }),
   onExit: () => leave(),
+  onCamera: () => { const m = player.toggleCamera(); lighting.overhead(m === 'top'); return m; },
 }, swap.seed, swap.theme);
 
 // ---- doors ---------------------------------------------------------------------------------
@@ -105,10 +113,16 @@ function banner(text: string): void {
   bannerT = 2.2;
 }
 
-/** Blink to black across a swap: building a world takes long enough to show a torn frame. */
+/** Blink to black across a swap: building a world blocks the main thread long enough to show a
+ *  torn frame. Two rAFs, not a timeout — the first commits the style, the second guarantees the
+ *  black was actually painted before we block. A timeout added a fixed ~180 ms of dead air to every
+ *  swap on top of the build; this waits exactly as long as the build takes and not a frame more. */
 function veil(build: () => void): void {
   veilEl.classList.add('on');
-  setTimeout(() => { build(); veilEl.classList.remove('on'); }, 180);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    build();
+    veilEl.classList.remove('on');
+  }));
 }
 
 // ---- boot ----------------------------------------------------------------------------------

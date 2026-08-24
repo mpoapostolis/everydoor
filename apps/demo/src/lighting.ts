@@ -14,6 +14,9 @@ export class Lighting {
   private readonly sun = new THREE.DirectionalLight(0xffffff, 1);
   private readonly pool: THREE.PointLight[] = [];
   private indoor: SemanticMap['lights'] = [];
+  /** What the current world asked for, so the overhead boost has something to go back to. */
+  private baseHemi = 1;
+  private baseSun = 1;
 
   constructor(private readonly scene: THREE.Scene) {
     this.sun.position.set(60, 120, 40);
@@ -38,6 +41,7 @@ export class Lighting {
     this.hemi.intensity = night ? 0.55 : 1.15;
     this.sun.color.set(night ? 0x6f86c8 : 0xfff3dd);
     this.sun.intensity = night ? 0.28 : 1.35;
+    this.remember();
   }
 
   /** An interior: flat ambient plus the map's own lamps, the nearest few of them. */
@@ -47,6 +51,16 @@ export class Lighting {
     this.scene.fog = new THREE.FogExp2(0x07090d, 0.012);
     this.hemi.color.set(0x9aa6c0); this.hemi.groundColor.set(0x2a2d38); this.hemi.intensity = 0.62;
     this.sun.intensity = 0.18;
+    this.remember();
+  }
+
+  private remember(): void { this.baseHemi = this.hemi.intensity; this.baseSun = this.sun.intensity; }
+
+  /** THE ROOF IS OFF. A top-down view loses the ceiling bounce the indoor rig is lit for, so the
+   *  floor goes muddy; this lifts the ambient while the lens is up there and puts it back after. */
+  overhead(on: boolean): void {
+    this.hemi.intensity = on ? 1.5 : this.baseHemi;
+    this.sun.intensity = on ? 0.75 : this.baseSun;
   }
 
   /** Re-aim the point-light budget at whatever room the player is standing in. */

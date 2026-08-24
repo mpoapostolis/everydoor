@@ -28,13 +28,18 @@ bun run dev            # http://localhost:5180
 ```
 
 <kbd>WASD</kbd> move · <kbd>shift</kbd> run · <kbd>space</kbd> jump · drag to look · arrows turn ·
-<kbd>E</kbd> at a door.
+<kbd>E</kbd> at a door · <kbd>T</kbd> for top-down.
 
 The panel on the left is live — seed, city flavour, prop style, or compose any archetype on its own
-— and **🎲 everything, from scratch** is the one to press first: a new seed redeals the whole city,
-which redeals the lot table, which re-derives every interior behind every door, and then walks you
-through one of them. The door is picked *from the seed*, so typing that number back reproduces the
-entire trip: same city, same building, same rooms.
+— and **🎲 everything, from scratch** is the one to press first: a new seed, a new city flavour, a
+new archetype and a new material style, all at once. The seed redeals the whole city, which redeals
+the lot table, which re-derives every interior behind every door, and then it walks you through a
+door that opens onto the archetype it rolled. Every knob shows what it landed on, so a world you
+liked can be typed back in.
+
+**⌖ top-down** (or <kbd>T</kbd>) lifts the lens straight up and takes the roof off — the same
+see-through that keeps a wall from hiding your character, opened to the whole frame. You get the
+furnished building from above while still walking around in it.
 
 The panel on the right is the **floorplan**, drawn from the same semantic map the walls were built
 from — rooms and their names, doors, locks, secret passages, the key, where the story starts, who is

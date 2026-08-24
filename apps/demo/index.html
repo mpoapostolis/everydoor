@@ -30,6 +30,7 @@
       #panel button.hero { background: #1e3a5f; border-color: #7dd3fc4d; color: #cfe9ff; padding: 6px; }
       #panel button.hero:hover { background: #27507f; }
       #panel button:disabled { cursor: default; }
+      #panel button.on { background: #1e3a5f; border-color: #7dd3fc80; color: #cfe9ff; }
       #panel input { width: 92px; text-align: right; }
       #panel hr { border: 0; border-top: 1px solid #ffffff14; margin: 10px 0; }
       #panel .keys { color: #6b7688; font-size: 11px; }
@@ -73,11 +74,13 @@
       #floorplan .fp-legend i { font-style: normal; }
       #floorplan.collapsed canvas, #floorplan.collapsed .fp-legend { display: none; }
 
+      /* black INSTANTLY, then fade back: a swap should blink, not dip. The transition on the way
+         in was pure dead time — the world was already built before the fade had finished. */
       #veil {
         position: fixed; inset: 0; z-index: 20; background: #05070b; opacity: 0;
-        transition: opacity .18s ease; pointer-events: none;
+        transition: opacity .22s ease; pointer-events: none;
       }
-      #veil.on { opacity: 1; }
+      #veil.on { opacity: 1; transition: none; }
     </style>
   </head>
   <body>

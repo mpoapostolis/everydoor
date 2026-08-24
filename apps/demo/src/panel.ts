@@ -6,11 +6,13 @@
 import { archetypeIds, CITY_THEMES, styleIds, type CityKind } from '@everydoor/core';
 
 export interface PanelHooks {
+  /** Flip the lens between over-the-shoulder and straight down. Returns the mode it landed in. */
+  onCamera(): 'follow' | 'top';
   onCity(seed: number, theme: CityKind): void;
   onArchetype(id: string, seed: number, style: string): void;
   onExit(): void;
-  /** A fresh everything: new seed, new flavour, new building, and a door picked at random. */
-  onRandomize(seed: number, theme: CityKind): void;
+  /** A fresh everything: new seed, new flavour, new archetype, new material style, new door. */
+  onRandomize(seed: number, theme: CityKind, archetype: string, style: string): void;
 }
 
 export interface PanelState {
@@ -53,6 +55,7 @@ export class Panel {
         <select id="p-arch"><option value="">— archetype —</option>${archetypeIds().map((a) => `<option value="${a}">${a}</option>`).join('')}</select>
       </div>
       <div class="row"><button id="p-random" class="hero" style="flex:1">🎲 everything, from scratch</button></div>
+      <div class="row"><button id="p-cam" style="flex:1">⌖ top-down</button></div>
       <div class="row"><button id="p-roll" style="flex:1">↻ new city</button><button id="p-exit" style="flex:1">↩ street</button></div>
       <hr />
       ${row('lot seed', 'lotSeed')}
@@ -85,18 +88,34 @@ export class Panel {
     this.styleSel.addEventListener('change', compose);
     this.exitBtn.addEventListener('click', () => hooks.onExit());
 
+    const camBtn = this.el.querySelector<HTMLButtonElement>('#p-cam')!;
+    const flip = () => {
+      const mode = hooks.onCamera();
+      camBtn.textContent = mode === 'top' ? '⌖ back to the shoulder' : '⌖ top-down';
+      camBtn.classList.toggle('on', mode === 'top');
+    };
+    camBtn.addEventListener('click', flip);
+    // T does the same thing without reaching for the panel
+    addEventListener('keydown', (e) => {
+      if (e.code !== 'KeyT' || e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
+      flip();
+    });
+
     // EVERYTHING, FROM SCRATCH. Not a "randomize" toy: a new seed rebuilds the city, which redeals
     // the lot table, which re-derives every interior behind every door — and then drops you through
     // one of them. Nothing about the world you were just in survives except the rules that made it.
     this.el.querySelector('#p-random')!.addEventListener('click', () => {
-      const themes = Object.keys(CITY_THEMES) as CityKind[];
-      const theme = themes[Math.floor(Math.random() * themes.length)];
+      const any = <T,>(a: T[]): T => a[Math.floor(Math.random() * a.length)];
       const seed = (Math.random() * 0xffffffff) >>> 0;
+      const theme = any(Object.keys(CITY_THEMES) as CityKind[]);
+      const archetype = any(archetypeIds());
+      const style = any(styleIds());
+      // the selects show what was rolled, so a world you liked can be recreated knob by knob
       this.seedInput.value = String(seed);
       this.themeSel.value = theme;
-      this.archSel.value = '';
-      this.styleSel.value = '';
-      hooks.onRandomize(seed, theme);
+      this.archSel.value = archetype;
+      this.styleSel.value = style;
+      hooks.onRandomize(seed, theme, archetype, style);
     });
   }
 

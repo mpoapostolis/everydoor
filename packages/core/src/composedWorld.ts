@@ -358,11 +358,18 @@ export class ComposedWorld implements World {
   streamAround(px: number, pz: number, immediate = false): boolean {
     if (!this.lightsBuilt) { this.lightsBuilt = true; this.buildLights(); }
     const ccx = Math.floor(px / CHUNK), ccz = Math.floor(pz / CHUNK);
+    let added = false;
     for (let dx = -VIEW; dx <= VIEW; dx++) for (let dz = -VIEW; dz <= VIEW; dz++) {
       const key = `${ccx + dx},${ccz + dz}`;
       if (!this.zoneChunks.has(key) || this.chunks.has(key) || this.queued.has(key)) continue;
-      this.queue.push(key); this.queued.add(key);
+      this.queue.push(key); this.queued.add(key); added = true;
     }
+    // NEAREST FIRST. The scan above walks the ring from one corner, so an amortized budget used to
+    // spend itself on whichever corner of the plan it reached first while the room the player is
+    // actually standing in stayed empty. That is what forced every entrance to build the WHOLE
+    // building up front (a ~90 ms freeze on a big plan); sorted, a couple of chunks a frame puts
+    // the walls around you immediately and fills the rest in behind you. (CityWorld already did this.)
+    if (added) this.queue.sort((a, b) => this.ringDist(a, ccx, ccz) - this.ringDist(b, ccx, ccz));
     for (const [key, rec] of this.chunks) {
       const [kx, kz] = key.split(',').map(Number);
       if (Math.max(Math.abs(kx - ccx), Math.abs(kz - ccz)) > VIEW + 1) {
@@ -381,6 +388,12 @@ export class ComposedWorld implements World {
     }
     return built;
   }
+  /** Chunk-ring distance from (ccx,ccz) — the order chunks should be built in. */
+  private ringDist(key: string, ccx: number, ccz: number): number {
+    const c = key.indexOf(',');
+    return Math.max(Math.abs(+key.slice(0, c) - ccx), Math.abs(+key.slice(c + 1) - ccz));
+  }
+
   get liveChunks(): number { return this.chunks.size; }
 
   /** Give back everything ONE chunk owns: its merged buffers and its seats in wallMeshes.

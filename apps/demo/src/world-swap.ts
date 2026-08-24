@@ -10,7 +10,7 @@
 // identity is the reason the swap can be this brutal: tear the scene down, build the other one.
 import * as THREE from 'three';
 import {
-  createCity, createInterior, lotSeed, hash32,
+  createCity, createInterior, cityLots, lotSeed, hash32,
   CITY_THEMES, DIR16_YAW, nearestStandable,
   type CityKind, type CityLot, type CityWorld, type ComposedWorld, type World, type WorldScript,
 } from '@everydoor/core';
@@ -52,6 +52,16 @@ function disposeTree(root: THREE.Object3D): void {
   root.clear();
 }
 
+/** How many streaming passes a fresh world gets before the player is allowed to look at it.
+ *  NOT the whole world: building every chunk up front is what a swap used to cost, and most of it
+ *  is scenery you have your back to. Both generators queue nearest-first, so these passes lay down
+ *  the ground you are standing on and the walls around it; the loop fills the rest in over the next
+ *  handful of frames, which are frames that actually render. */
+const WARM_PASSES = 4;
+const warm = (world: World, x: number, z: number): void => {
+  for (let i = 0; i < WARM_PASSES; i++) world.streamAround(x, z);
+};
+
 export class WorldSwap {
   readonly root = new THREE.Group();
   place!: Place;
@@ -74,7 +84,7 @@ export class WorldSwap {
     const world = createCity(this.root, this.seed, CITY_THEMES[theme]);
     this.place = { kind: 'city', world, theme };
     const start = world.playerStart();
-    world.streamAround(start.x, start.z, true);
+    warm(world, start.x, start.z);
     const spot = nearestStandable(world, start.x, start.z);
     this.ev.onCity(theme, world);
     return { ...spot, yaw: 0 };
@@ -82,12 +92,17 @@ export class WorldSwap {
 
   // -- interiors -----------------------------------------------------------------------------
 
-  /** Walk into a street door. */
+  /** Walk into a street door of the city we are standing in. */
   enterLot(lot: CityLot, script?: WorldScript, style?: string): { x: number; z: number; yaw: number } {
-    const from = { seed: this.seed, theme: this.theme, lot };
+    return this.enterFrom(this.seed, this.theme, lot, script, style);
+  }
+
+  /** Walk into a door of a NAMED city — which we may never have built. See `randomize`. */
+  private enterFrom(seed: number, theme: CityKind, lot: CityLot, script?: WorldScript, style?: string) {
     this.reset();
-    const world = createInterior(this.root, { seed: lotSeed(from.seed, lot.id), archetype: lot.archetype, script, style });
-    this.from = from;
+    const world = createInterior(this.root, { seed: lotSeed(seed, lot.id), archetype: lot.archetype, script, style });
+    this.seed = seed; this.theme = theme;
+    this.from = { seed, theme, lot };
     return this.settle(world, lot, lot.archetype);
   }
 
@@ -103,14 +118,30 @@ export class WorldSwap {
    *  the lot table — and then this walks you through one of its doors. The door is picked FROM THE
    *  SEED, not from a die, so typing that seed back reproduces the entire trip: same city, same
    *  flavour, same building, same rooms. `pick` is the story to furnish the chosen archetype with. */
-  randomize(seed: number, theme: CityKind, pick: (archetype: string) => WorldScript | undefined): { x: number; z: number; yaw: number } {
-    this.city(seed, theme);
-    const lots = (this.place.world as CityWorld).lots();
-    // prefer a civic door: they are the deliberately varied ones (a school, a hospital, a precinct)
+  randomize(
+    seed: number,
+    theme: CityKind,
+    pick: (archetype: string) => WorldScript | undefined,
+    opts: { style?: string; archetype?: string } = {},
+  ): { x: number; z: number; yaw: number } {
+    // THE LOT TABLE IS A PURE FUNCTION. `cityLots` deals the doors from the seed with no geometry
+    // behind it, so picking one costs a fraction of a millisecond — this used to build the entire
+    // city (a 7×7 ring of chunks) just to read the table and then throw it away one line later.
+    // The street is built for real on the way OUT, when you actually have to stand on it.
+    const lots = cityLots(seed, theme);
+    // an archetype was asked for: enter a door of the new city that actually opens onto it, so the
+    // street behind you is real. `castle` and `dungeon` are nobody's front door — those compose
+    // standalone, and "↩ street" drops you into this seed's city anyway.
+    const named = opts.archetype ? lots.filter((l) => l.archetype === opts.archetype) : [];
+    if (opts.archetype && !named.length) {
+      this.seed = seed; this.theme = theme;
+      return this.standalone(opts.archetype, seed, pick(opts.archetype), opts.style);
+    }
+    // otherwise prefer a civic door: the deliberately varied ones (a school, a hospital, a precinct)
     const civic = lots.filter((l) => l.civic);
-    const pool = civic.length ? civic : lots;
+    const pool = named.length ? named : civic.length ? civic : lots;
     const lot = pool[hash32(seed, 'door') % pool.length];
-    return this.enterLot(lot, pick(lot.archetype));
+    return this.enterFrom(seed, theme, lot, pick(lot.archetype), opts.style);
   }
 
   /** Back out onto the pavement, in front of the building we just left, facing the street. */
@@ -143,7 +174,7 @@ export class WorldSwap {
   private settle(world: ComposedWorld, lot: CityLot | null, archetype: string): { x: number; z: number; yaw: number } {
     this.place = { kind: 'interior', world, lot, archetype };
     const s = world.map.start;
-    world.streamAround(s.x, s.z, true);
+    warm(world, s.x, s.z);
     this.extras = spawnPeople(this.root, world.map);
     this.ev.onInterior(world);
     const spot = nearestStandable(world, s.x, s.z);

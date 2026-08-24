@@ -15,8 +15,13 @@ const GRAVITY = 42;
 const JUMP = 15;
 const CAM_DIST = 11;      // how far behind the hero the lens sits
 const CAM_HEIGHT = 2.4;
+const TOP_HEIGHT = 62;    // how high the top-down lens hangs — enough to hold a whole room, or a block
 
 export interface PlayerOpts { scene: THREE.Object3D; camera: THREE.PerspectiveCamera; renderer: THREE.WebGLRenderer; dom: HTMLElement }
+
+/** Where the lens sits. `follow` is over the hero's shoulder; `top` looks straight down and dissolves
+ *  everything above their head, so a roofed building reads like its own floorplan. */
+export type CamMode = 'follow' | 'top';
 
 export class Player {
   readonly hero: Blocky;
@@ -27,6 +32,7 @@ export class Player {
   private readonly keys = new Set<string>();
   private walkPhase = 0;
   private dragging = false;
+  private mode: CamMode = 'follow';
   private readonly camera: THREE.PerspectiveCamera;
   private readonly renderer: THREE.WebGLRenderer;
   private readonly subject = new THREE.Vector3();
@@ -75,6 +81,10 @@ export class Player {
 
   /** True while the mouse is held down and turning the camera. */
   get looking(): boolean { return this.dragging; }
+
+  get cameraMode(): CamMode { return this.mode; }
+  /** Flip between over-the-shoulder and straight down. Returns the mode we landed in. */
+  toggleCamera(): CamMode { return (this.mode = this.mode === 'follow' ? 'top' : 'follow'); }
 
   /** True while the key is held — the door prompt reads E through this too. */
   held(code: string): boolean { return this.keys.has(code); }
@@ -131,8 +141,25 @@ export class Player {
 
     // ---- the lens -----------------------------------------------------------------------------
     this.subject.set(this.pos.x, this.pos.y + EYE, this.pos.z);
-    const cd = Math.cos(this.pitch) * CAM_DIST;
     const cam = this.camera.position;
+
+    if (this.mode === 'top') {
+      // STRAIGHT DOWN, AND THE ROOF COMES OFF. The camera see-through already knows how to dissolve
+      // whatever stands between the lens and the hero; opened to the whole frame, with nothing
+      // spared by its normal, that is every ceiling and every wall-top above their head — so a
+      // roofed building reads as its own floorplan without the generator building a second one.
+      cam.set(this.pos.x, this.pos.y + TOP_HEIGHT, this.pos.z);
+      // keep the way they are facing pointing UP the screen, or turning spins the whole world
+      this.camera.up.set(-Math.sin(this.yaw), 0, -Math.cos(this.yaw));
+      this.camera.lookAt(this.subject);
+      // spare everything below head height: the walls stay as a cutaway, only the ceiling and the
+      // upper courses come off. Cutting from the floor up would leave you looking at bare slabs.
+      updateCutout(this.camera, this.subject, this.renderer, 3, this.pos.y + EYE * 0.8, 1e6, 2);
+      return;
+    }
+
+    this.camera.up.set(0, 1, 0);
+    const cd = Math.cos(this.pitch) * CAM_DIST;
     cam.set(
       this.subject.x + Math.sin(this.yaw) * cd,
       this.subject.y + CAM_HEIGHT - Math.sin(this.pitch) * CAM_DIST,
