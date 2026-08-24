@@ -2,12 +2,16 @@
   "name": "voxel-city-workspace",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*", "apps/*"],
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
-    "dev": "bun --cwd apps/demo run dev",
-    "build": "bun --cwd apps/demo run build",
+    "dev": "bun run --cwd apps/demo dev",
+    "build": "bun run --cwd apps/demo build",
     "typecheck": "tsc --noEmit",
-    "test": "bun scripts/test.mjs"
+    "test": "bun scripts/test.mjs",
+    "preview": "bun run --cwd apps/demo preview"
   },
   "devDependencies": {
     "@types/three": "^0.184.1",
