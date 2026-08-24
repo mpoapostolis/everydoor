@@ -5,7 +5,7 @@
 // per room, and the rig spends a small budget on the ones nearest the player — the rest is ambient.
 // Keeping the count fixed is the point: a hospital with forty rooms must not cost forty point lights.
 import * as THREE from 'three';
-import type { CityTheme, SemanticMap } from '@voxel-city/core';
+import type { CityTheme, SemanticMap } from '@everydoor/core';
 
 const INDOOR_BUDGET = 12;
 

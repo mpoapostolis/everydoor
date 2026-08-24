@@ -1,5 +1,5 @@
 {
-  "name": "voxel-city-workspace",
+  "name": "everydoor",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -19,5 +19,7 @@
     "tsx": "^4.23.1",
     "typescript": "^6.0.3",
     "vite": "^8.0.16"
-  }
+  },
+  "license": "MIT",
+  "description": "A voxel city where every door opens onto a procedurally composed interior."
 }

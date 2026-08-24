@@ -6,7 +6,7 @@
 // composer wrote for them when you walk up. No dialogue system, no quests — just proof that the
 // building was populated on purpose.
 import * as THREE from 'three';
-import { buildBlocky, lookSeed, seededLook, type Person, type SemanticMap } from '@voxel-city/core';
+import { buildBlocky, lookSeed, seededLook, type Person, type SemanticMap } from '@everydoor/core';
 
 const PLATE_H = 7.6;
 

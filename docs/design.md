@@ -1,4 +1,4 @@
-# voxel-city — extracting the city and the procedural interiors
+# everydoor — the design
 
 **Date:** 2026-08-24
 **Status:** implemented

@@ -3,7 +3,7 @@
 // Every knob here is one of the generator's actual inputs: the city seed, the flavour, and which
 // archetype to compose. Nothing is a display setting. Turning one and watching the world change is
 // the entire point of the demo — so the panel writes straight to the swap and never keeps its own copy.
-import { archetypeIds, CITY_THEMES, type CityKind } from '@voxel-city/core';
+import { archetypeIds, CITY_THEMES, type CityKind } from '@everydoor/core';
 
 export interface PanelHooks {
   onCity(seed: number, theme: CityKind): void;
@@ -34,7 +34,7 @@ export class Panel {
   constructor(hooks: PanelHooks, seed: number, theme: CityKind) {
     this.el = document.getElementById('panel')!;
     this.el.innerHTML = `
-      <h1>voxel-city</h1>
+      <h1>everydoor</h1>
       ${row('where', 'where')}
       ${row('place', 'detail')}
       ${row('room', 'zone')}
@@ -54,7 +54,7 @@ export class Panel {
       ${row('chunks', 'chunks')}
       ${row('fps', 'fps')}
       <hr />
-      <div class="keys">WASD move · shift run · space jump<br />click to look · E at a door · esc frees the mouse</div>`;
+      <div class="keys">WASD move · shift run · space jump<br />drag to look · arrows turn · <b>E</b> at a door</div>`;
 
     for (const k of ['where', 'detail', 'zone', 'lotSeed', 'lots', 'chunks', 'fps']) {
       this.vals[k] = this.el.querySelector(`#v-${k}`)!;

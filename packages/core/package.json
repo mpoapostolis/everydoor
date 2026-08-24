@@ -1,9 +1,30 @@
 {
-  "name": "@voxel-city/core",
+  "name": "@everydoor/core",
   "version": "0.1.0",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
-  "exports": { ".": "./src/index.ts" },
-  "peerDependencies": { "three": ">=0.180.0" }
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "three": ">=0.180.0"
+  },
+  "license": "MIT",
+  "description": "Voxel city and story-driven interior generators for three.js.",
+  "keywords": [
+    "procedural-generation",
+    "voxel",
+    "three",
+    "threejs",
+    "city-generator",
+    "level-generation",
+    "dungeon-generator",
+    "game-development"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mpoapostolis/everydoor.git",
+    "directory": "packages/core"
+  }
 }

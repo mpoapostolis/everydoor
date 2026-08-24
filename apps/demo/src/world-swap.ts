@@ -13,7 +13,7 @@ import {
   createCity, createLotInterior, createInterior, lotSeed,
   CITY_THEMES, DIR16_YAW, nearestStandable,
   type CityKind, type CityLot, type CityWorld, type ComposedWorld, type World, type WorldScript,
-} from '@voxel-city/core';
+} from '@everydoor/core';
 import { spawnPeople, type Extra } from './people';
 
 export type Place =

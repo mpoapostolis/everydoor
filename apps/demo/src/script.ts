@@ -8,7 +8,7 @@
 //
 // These are demo stories: one per archetype, short enough to read, specific enough that you can walk
 // in and see the plan obeyed them. Swap in your own and the buildings change shape.
-import type { WorldScript } from '@voxel-city/core';
+import type { WorldScript } from '@everydoor/core';
 
 interface Sketch {
   title: string;

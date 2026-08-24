@@ -12,7 +12,7 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "types": ["vite/client"],
-    "paths": { "@voxel-city/core": ["./packages/core/src/index.ts"] }
+    "paths": { "@everydoor/core": ["./packages/core/src/index.ts"] }
   },
   "include": ["packages/*/src/**/*.ts", "apps/*/src/**/*.ts"]
 }

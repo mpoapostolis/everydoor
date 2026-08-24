@@ -5,7 +5,7 @@
 // World interface for — `heightAt` for the ground, `blocked` for the walls, `ceilingY` for the lid.
 // Swap a city for a composed interior underneath it mid-frame and nothing here needs to change.
 import * as THREE from 'three';
-import { buildBlocky, updateCutout, type Blocky, type World } from '@voxel-city/core';
+import { buildBlocky, updateCutout, type Blocky, type World } from '@everydoor/core';
 
 const EYE = 5.0;          // the anchor the camera orbits — roughly the hero's head
 const RADIUS = 1.3;       // the body's collision radius, in world units
@@ -26,7 +26,7 @@ export class Player {
   private grounded = true;
   private readonly keys = new Set<string>();
   private walkPhase = 0;
-  private locked = false;
+  private dragging = false;
   private readonly camera: THREE.PerspectiveCamera;
   private readonly renderer: THREE.WebGLRenderer;
   private readonly subject = new THREE.Vector3();
@@ -38,28 +38,47 @@ export class Player {
     this.hero = buildBlocky({ noCut: true, shirt: 0x2f6fd0, pants: 0x2a2f3d, shoes: 0x1a1d25 });
     opts.scene.add(this.hero.rig);
 
+    // LOOKING IS A DRAG, NOT A CAPTURE. Pointer lock hijacks the cursor and the escape key, which
+    // is a bad trade for a demo you are meant to poke at — the panel is right there. Hold any mouse
+    // button and drag to turn; let go and the cursor is yours again.
     const dom = opts.dom;
-    dom.addEventListener('click', () => { if (!this.locked) dom.requestPointerLock(); });
-    document.addEventListener('pointerlockchange', () => { this.locked = document.pointerLockElement === dom; });
-    document.addEventListener('mousemove', (e) => {
-      if (!this.locked) return;
-      this.yaw -= e.movementX * 0.0024;
-      this.pitch = Math.max(-1.15, Math.min(0.55, this.pitch - e.movementY * 0.0021));
+    dom.style.cursor = 'grab';
+    dom.addEventListener('pointerdown', (e) => {
+      this.dragging = true;
+      dom.style.cursor = 'grabbing';
+      dom.setPointerCapture(e.pointerId);
     });
+    const release = (e: PointerEvent) => {
+      this.dragging = false;
+      dom.style.cursor = 'grab';
+      if (dom.hasPointerCapture(e.pointerId)) dom.releasePointerCapture(e.pointerId);
+    };
+    dom.addEventListener('pointerup', release);
+    dom.addEventListener('pointercancel', release);
+    dom.addEventListener('pointermove', (e) => {
+      if (!this.dragging) return;
+      this.yaw -= e.movementX * 0.005;
+      this.pitch = Math.max(-1.15, Math.min(0.55, this.pitch - e.movementY * 0.004));
+    });
+    // a right-drag is a perfectly good way to turn — don't let the menu eat it
+    dom.addEventListener('contextmenu', (e) => e.preventDefault());
+
     addEventListener('keydown', (e) => {
       // never swallow a keystroke meant for the panel's inputs
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
       this.keys.add(e.code);
-      if (e.code === 'Space') e.preventDefault();
+      if (e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault();
     });
     addEventListener('keyup', (e) => this.keys.delete(e.code));
     addEventListener('blur', () => this.keys.clear());
   }
 
-  /** True while the key is held — the door prompt reads Enter/E through this too. */
+  /** True while the mouse is held down and turning the camera. */
+  get looking(): boolean { return this.dragging; }
+
+  /** True while the key is held — the door prompt reads E through this too. */
   held(code: string): boolean { return this.keys.has(code); }
   consume(code: string): boolean { const had = this.keys.has(code); this.keys.delete(code); return had; }
-  get pointerLocked(): boolean { return this.locked; }
 
   /** Drop the body at (x,z) facing `yaw`, standing on whatever ground is there. */
   place(world: World, x: number, z: number, yaw = this.yaw): void {
@@ -77,6 +96,11 @@ export class Player {
       this.wish.set(-sin * f + cos * s, 0, -cos * f - sin * s).normalize();
     }
     const speed = SPEED * (this.keys.has('ShiftLeft') || this.keys.has('ShiftRight') ? SPRINT : 1);
+    // the mouse is never required: the arrows turn the lens
+    const turn = (this.keys.has('ArrowLeft') ? 1 : 0) - (this.keys.has('ArrowRight') ? 1 : 0);
+    if (turn) this.yaw += turn * 2.1 * dt;
+    const tilt = (this.keys.has('ArrowUp') ? 1 : 0) - (this.keys.has('ArrowDown') ? 1 : 0);
+    if (tilt) this.pitch = Math.max(-1.15, Math.min(0.55, this.pitch + tilt * 1.4 * dt));
 
     // ---- move, one axis at a time so a wall slides instead of stopping -----------------------
     // Movement is a pure DESTINATION test (no depenetration), which is why every spawn goes

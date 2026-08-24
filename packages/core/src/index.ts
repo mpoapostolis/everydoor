@@ -1,4 +1,4 @@
-// @voxel-city/core — a voxel city you can walk, with a procedurally composed interior behind every door.
+// @everydoor/core — a voxel city you can walk, with a procedurally composed interior behind every door.
 //
 // TWO GENERATORS, ONE CONTRACT. Both return a `World`: an object that streams its own chunks around
 // the player, answers `heightAt` / `blocked`, and hands out wall meshes. Nothing above this line

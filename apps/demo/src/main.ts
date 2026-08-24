@@ -2,10 +2,10 @@
 //
 // The loop is deliberately dumb: stream whatever world is current around the player, move the body,
 // look for a doorway, draw. All of the interesting behaviour lives one layer down — in the generator
-// (@voxel-city/core) and in world-swap.ts, which is the only thing that knows a city and an interior
+// (@everydoor/core) and in world-swap.ts, which is the only thing that knows a city and an interior
 // are different kinds of thing at all.
 import * as THREE from 'three';
-import { CITY_THEMES, dressCutout, type CityKind, type CityWorld, type ComposedWorld } from '@voxel-city/core';
+import { CITY_THEMES, dressCutout, type CityKind, type CityWorld, type ComposedWorld } from '@everydoor/core';
 import { Player } from './player';
 import { Lighting } from './lighting';
 import { WorldSwap } from './world-swap';
