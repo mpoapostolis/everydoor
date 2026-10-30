@@ -2,6 +2,8 @@
 
 **A voxel city where every door opens onto a procedurally composed interior.**
 
+The city and composer power [VXLVERSE](https://vxlverse.com), a 3D story-game maker in the browser.
+
 Walk down the street, press <kbd>E</kbd> at any building, and the world under your feet becomes
 that building's rooms — a floor plan with named rooms, locked doors, the key that opens each lock,
 furniture on the floor and people standing in it. Walk back out and you are on the same doorstep.
